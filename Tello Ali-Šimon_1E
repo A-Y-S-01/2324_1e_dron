@@ -1,0 +1,80 @@
+from djitellopy import Tello
+import time
+
+# Inicializace dronu
+tello = Tello() 
+
+# Připojení k dronu
+tello.connect(False) 
+
+# Zobrazení stavu baterie
+# print(f"Battery: {tello.get_battery()}%")
+
+# Rychlost
+rychlost = 100
+tello.set_speed(rychlost)
+print(f"Rychlost je {rychlost} cm/s")
+
+# Vzlet
+tello.takeoff() 
+
+# Definování průletových bodů a jejich souřadnic
+waypoints = {
+    'A': (0, 0),
+    'B': (4, 0),
+    'C': (4, 4),
+    'D': (0, 4),
+    'E': (2, 2)
+}
+
+# Kalibrace metru
+delka_metru = 100
+
+# Funkce pro pohyb dronu
+def move_to(tello, start, end):
+    x_distance = (end[0] - start[0]) * delka_metru  # vzdálenost: cm -> m
+    y_distance = (end[1] - start[1]) * delka_metru  # vzdálenost: cm -> m
+
+    print(f"Moving from {start} to {end}")
+    print(f"x_distance: {x_distance} cm, \ny_distance: {y_distance} cm")
+   
+    if x_distance > 0:
+        tello.move_forward(x_distance)
+    elif x_distance < 0:
+        tello.move_back(abs(x_distance))
+   
+    if y_distance > 0:
+        tello.move_right(y_distance)
+    elif y_distance < 0:
+        tello.move_left(abs(y_distance))
+
+
+# Cesta podle pořadí zastávek: A -> B -> C -> D -> A
+path = ['A', 'B', 'C', 'D', 'E', 'A']
+
+# Výchozí bod
+current_position = waypoints[path[0]]
+pause_duration = .5
+
+# Proletět všechny zastávky
+for i in range(1, len(path)):
+   
+    next_position = waypoints[path[i]]
+    move_to(tello, current_position, next_position)
+    current_position = next_position
+
+
+    print(f"Pausing for {pause_duration} seconds at {path[i]} \n")
+    time.sleep(pause_duration)  # krátká pauza mezi přesuny
+   
+    # if i < len(path) - 1:
+    #     print(f"Flipping at {path[i]}")
+    #     tello.flip('f')
+
+# Přistání
+tello.land() 
+
+# Odpojení dronu
+tello.end() 
+
+
